@@ -1067,6 +1067,10 @@ void npc_class_behave(struct char_data *ch)
   default:
     npc_warrior_behave(ch, vict, num_targets);
     break;
+  case CLASS_BLACKGUARD:
+    npc_blackguard_behave(ch, vict, num_targets);
+    break;
+      
   }
 }
 
