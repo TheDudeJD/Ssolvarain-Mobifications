@@ -1027,6 +1027,41 @@ void npc_berserker_behave(struct char_data *ch, struct char_data *vict,
 
   perform_headbutt(ch, vict);
 }
+// blackguard behaviour, behave based on level
+
+void npc_blackguard_behave(struct char_data *ch, struct char_data *vict,
+                        int engaged)
+{
+  float percent = ((float)GET_HIT(ch) / (float)GET_MAX_HIT(ch)) * 100.0;
+
+  /* list of skills to use:
+   1) rescue
+   2) corrupting touch
+   3) smite good
+   4) switch opponents
+   5) channel energy
+   */
+
+  /* first rescue friends/master */
+  if (npc_rescue(ch))
+    return;
+
+  if (!can_continue(ch, TRUE))
+    return;
+
+  /* switch opponents attempt */
+  if (!rand_number(0, 2) && npc_switch_opponents(ch, vict))
+    return;
+
+  if (IS_GOOD(vict))
+    perform_smite(ch, SMITE_TYPE_GOOD);
+
+  if (IS_GOOD(vict) && GET_LEVEL(ch) > 2)
+    perform_channelenergy(ch, vict, (GET_LEVEL(ch) - 2));
+
+  if (percent <= 25.0)
+    perform_corruptingtouch(ch, vict)
+}
 
 /* this is our non-caster's entry point in combat AI
  all semi-casters such as ranger/paladin will go through here */
@@ -1066,6 +1101,9 @@ void npc_class_behave(struct char_data *ch)
   case CLASS_WEAPON_MASTER: /*todo!*/
   default:
     npc_warrior_behave(ch, vict, num_targets);
+    break;
+  case CLASS_BLACKGUARD:
+    npc_blackguard_behave(ch, vict, num_targets);
     break;
   }
 }
@@ -1372,6 +1410,14 @@ void npc_offensive_spells(struct char_data *ch)
       return;
     }
 
+    break;
+    
+  case CLASS_BLACKGUARD: // 4 out of 5 times will not cast
+    if (rand_number(0, 4))
+    {
+      npc_class_behave(ch);
+      return;
+    }
     break;
   }
 
